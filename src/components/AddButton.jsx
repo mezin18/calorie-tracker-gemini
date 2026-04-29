@@ -1,44 +1,5 @@
 import { useState, useRef } from "react";
-
-async function analyzeWithGemini(imageBase64, mimeType, apiKey) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inlineData: { mimeType: mimeType, data: imageBase64 } },
-            { text: "כמה קלוריות בערך יש במאכל שבתמונה? החזר אך ורק מספר שלם שמייצג את סך הקלוריות. ללא הסברים, רק מספר." },
-          ],
-        }],
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    const errMsg = errData?.error?.message || `HTTP ${response.status}`;
-    throw new Error(errMsg);
-  }
-
-  const data = await response.json();
-
-  // Check for blocked / empty response
-  const candidate = data.candidates?.[0];
-  if (!candidate) {
-    const reason = data.promptFeedback?.blockReason || "תגובה ריקה מה-API";
-    throw new Error(reason);
-  }
-
-  const text = candidate.content?.parts?.[0]?.text || "";
-  const calories = parseInt(text.replace(/[^0-9]/g, ""));
-  if (isNaN(calories) || calories === 0) {
-    throw new Error("לא זוהה מאכל בתמונה");
-  }
-  return calories;
-}
+import { analyzeMealCalories } from "../services/aiService";
 
 export default function AddButton({ onManual, onPhoto, geminiKey, colorA = "#1e90ff", colorB = "#2ed573" }) {
   const [open, setOpen] = useState(false);
@@ -51,31 +12,25 @@ export default function AddButton({ onManual, onPhoto, geminiKey, colorA = "#1e9
     if (!file) return;
     setOpen(false);
 
-    if (!geminiKey) {
-      setMsg("⚠️ הגדר Gemini API Key בהגדרות");
-      setTimeout(() => setMsg(""), 4000);
-      e.target.value = "";
-      return;
-    }
-
     setAnalyzing(true);
     setMsg("מנתח את הארוחה...");
-
-    const mimeType = file.type || "image/jpeg";
 
     const reader = new FileReader();
     reader.onload = async () => {
       try {
         const base64 = reader.result.split(",")[1];
-        const cal = await analyzeWithGemini(base64, mimeType, geminiKey);
+        const mimeType = file.type || "image/jpeg";
+        const cal = await analyzeMealCalories(base64, mimeType);
         setAnalyzing(false);
-        setMsg(`✅ זוהו ~${cal} קלוריות`);
-        onPhoto(cal);
+        if (cal > 0) {
+          setMsg(`✅ זוהו ~${cal} קלוריות`);
+          onPhoto(cal);
+        } else {
+          setMsg("❌ לא זוהה מאכל בתמונה. נסה שוב.");
+        }
       } catch (err) {
         setAnalyzing(false);
-        const details = err?.message || "שגיאה לא ידועה";
-        console.error("Gemini Error:", details);
-        setMsg(`❌ שגיאה: ${details}`);
+        setMsg(`❌ שגיאה: ${err.message}`);
       }
       setTimeout(() => setMsg(""), 5000);
     };
