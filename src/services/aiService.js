@@ -1,4 +1,4 @@
-export async function analyzeMealCalories(imageBase64) {
+export async function analyzeMealCalories(imageBase64, mimeType = "image/jpeg") {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -18,7 +18,7 @@ export async function analyzeMealCalories(imageBase64) {
               parts: [
                 {
                   inlineData: {
-                    mimeType: "image/jpeg",
+                    mimeType: mimeType,
                     data: imageBase64,
                   },
                 },
@@ -32,12 +32,26 @@ export async function analyzeMealCalories(imageBase64) {
       }
     );
 
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData?.error?.message || `HTTP ${response.status}`;
+      console.error("Gemini API Error:", errMsg);
+      throw new Error(errMsg);
+    }
+
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "0";
+
+    const candidate = data.candidates?.[0];
+    if (!candidate) {
+      const reason = data.promptFeedback?.blockReason || "תגובה ריקה מה-API";
+      throw new Error(reason);
+    }
+
+    const text = candidate.content?.parts?.[0]?.text || "";
     const calories = parseInt(text.replace(/[^0-9]/g, ""));
     return isNaN(calories) ? 0 : calories;
   } catch (err) {
-    console.error("Gemini Error:", err);
+    console.error("Gemini Error:", err?.message || err);
     return 0;
   }
 }
