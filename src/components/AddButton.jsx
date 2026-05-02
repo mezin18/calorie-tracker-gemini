@@ -1,24 +1,23 @@
 import { useState, useRef } from "react";
 import { analyzeMealCalories } from "../services/aiService";
 
-export default function AddButton({ onManual, onPhoto, geminiKey, colorA = "#1e90ff", colorB = "#2ed573" }) {
-  const [open, setOpen] = useState(false);
+export default function AddButton({ onManual, onPhoto, colorA = "#1e90ff", colorB = "#2ed573" }) {
+  const [open,      setOpen]      = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-  const [msg, setMsg] = useState("");
+  const [msg,       setMsg]       = useState("");
   const fileRef = useRef();
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setOpen(false);
-
     setAnalyzing(true);
     setMsg("מנתח את הארוחה...");
 
     const reader = new FileReader();
     reader.onload = async () => {
       try {
-        const base64 = reader.result.split(",")[1];
+        const base64   = reader.result.split(",")[1];
         const mimeType = file.type || "image/jpeg";
         const cal = await analyzeMealCalories(base64, mimeType);
         setAnalyzing(false);
@@ -60,7 +59,7 @@ export default function AddButton({ onManual, onPhoto, geminiKey, colorA = "#1e9
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="28" height="28">
           <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
+          <line x1="5"  y1="12" x2="19" y2="12" />
         </svg>
         הוסף קלוריות
       </button>

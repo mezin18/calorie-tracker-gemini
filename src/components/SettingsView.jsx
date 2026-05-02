@@ -2,20 +2,18 @@ import { useState } from "react";
 
 const THEMES = [
   { id: "default", label: "כחול-ירוק", a: "#1e90ff", b: "#2ed573" },
-  { id: "sunset", label: "שקיעה", a: "#ff6b6b", b: "#ffa502" },
-  { id: "purple", label: "סגול", a: "#a855f7", b: "#ec4899" },
-  { id: "ocean", label: "אוקיינוס", a: "#06b6d4", b: "#3b82f6" },
+  { id: "sunset",  label: "שקיעה",     a: "#ff6b6b", b: "#ffa502" },
+  { id: "purple",  label: "סגול",      a: "#a855f7", b: "#ec4899" },
+  { id: "ocean",   label: "אוקיינוס",  a: "#06b6d4", b: "#3b82f6" },
 ];
 
 export default function SettingsView({ onBack, settings, onSave }) {
-  const [geminiKey, setGeminiKey] = useState(settings.geminiKey || "");
-  const [showKey, setShowKey] = useState(false);
   const [theme, setTheme] = useState(settings.theme || "default");
-  const [name, setName] = useState(settings.name || "");
+  const [name,  setName]  = useState(settings.name  || "");
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
-    onSave({ geminiKey, theme, name });
+    onSave({ theme, name });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -45,42 +43,6 @@ export default function SettingsView({ onBack, settings, onSave }) {
           </div>
         </section>
 
-        {/* Gemini API Key */}
-        <section className="settings-section">
-          <p className="settings-section-title">🤖 בינה מלאכותית</p>
-          <div className="settings-card">
-            <label className="settings-label">Gemini API Key</label>
-            <p className="settings-hint">
-              קבל מפתח חינמי ב-{" "}
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                className="settings-link"
-              >
-                aistudio.google.com
-              </a>
-            </p>
-            <div className="key-input-wrap">
-              <input
-                className="settings-input"
-                type={showKey ? "text" : "password"}
-                placeholder="AIza..."
-                value={geminiKey}
-                onChange={(e) => setGeminiKey(e.target.value)}
-              />
-              <button className="show-key-btn" onClick={() => setShowKey(!showKey)}>
-                {showKey ? "🙈" : "👁️"}
-              </button>
-            </div>
-            {geminiKey ? (
-              <p className="key-status key-ok">✅ מפתח מוגדר</p>
-            ) : (
-              <p className="key-status key-missing">⚠️ ללא מפתח — צילום ארוחה לא יעבוד</p>
-            )}
-          </div>
-        </section>
-
         {/* ערכת נושא */}
         <section className="settings-section">
           <p className="settings-section-title">🎨 ערכת צבעים</p>
@@ -101,7 +63,6 @@ export default function SettingsView({ onBack, settings, onSave }) {
           </div>
         </section>
 
-        {/* כפתור שמירה */}
         <button className="settings-save-btn" onClick={handleSave}>
           {saved ? "✅ נשמר!" : "שמור הגדרות"}
         </button>

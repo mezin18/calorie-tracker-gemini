@@ -26,15 +26,15 @@ function DateBadge({ name }) {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState("home");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuView, setMenuView] = useState("main");
+  const [screen,    setScreen]    = useState("home");
+  const [menuOpen,  setMenuOpen]  = useState(false);
+  const [menuView,  setMenuView]  = useState("main");
 
   const [targetCalories, setTargetCalories] = useState(2000);
-  const [targetInput, setTargetInput] = useState("2000");
-  const [history, setHistory] = useState({});
-  const [currentCalories, setCurrentCalories] = useState(0);
-  const [settings, setSettings] = useState({ geminiKey: "", theme: "default", name: "" });
+  const [targetInput,    setTargetInput]    = useState("2000");
+  const [history,        setHistory]        = useState({});
+  const [currentCalories,setCurrentCalories]= useState(0);
+  const [settings,       setSettings]       = useState({ theme: "default", name: "" });
 
   useEffect(() => {
     const saved = loadData();
@@ -43,7 +43,11 @@ export default function App() {
       setTargetInput(String(saved.target || 2000));
       setHistory(saved.history || {});
       setCurrentCalories(saved.history?.[todayKey()] || 0);
-      if (saved.settings) setSettings(saved.settings);
+      if (saved.settings) {
+        // נקה geminiKey ישן שאולי נשמר ב-localStorage
+        const { geminiKey: _drop, ...cleanSettings } = saved.settings;
+        setSettings({ theme: "default", name: "", ...cleanSettings });
+      }
     }
   }, []);
 
@@ -119,7 +123,6 @@ export default function App() {
         <AddButton
           onManual={() => setScreen("manual")}
           onPhoto={addCalories}
-          geminiKey={settings.geminiKey}
           colorA={themeColors.a}
           colorB={themeColors.b}
         />
