@@ -1,8 +1,9 @@
-export async function analyzeMealCalories(imageBase64, mimeType = "image/jpeg") {
+export async function analyzeMealCalories(images, description = "") {
+  // images: [{base64, mimeType}] — 1 or 2 items
   const response = await fetch("/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ imageBase64, mimeType }),
+    body: JSON.stringify({ images, description }),
   });
 
   const data = await response.json();
