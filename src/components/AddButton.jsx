@@ -2,6 +2,35 @@ import { useState, useRef } from "react";
 import { analyzeMealCalories } from "../services/aiService";
 
 const MAX_DESC_LENGTH = 80;
+const MAX_PX = 1280;      // max width/height after resize
+const JPEG_QUALITY = 0.82; // good quality, keeps file small
+
+// Resize + compress an image File → {base64, mimeType, dataUrl}
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > MAX_PX || height > MAX_PX) {
+          if (width > height) { height = Math.round((height / width) * MAX_PX); width = MAX_PX; }
+          else                { width  = Math.round((width / height) * MAX_PX); height = MAX_PX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width  = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+        resolve({ base64: dataUrl.split(",")[1], mimeType: "image/jpeg", dataUrl });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function AddButton({ onManual, onPhoto, colorA = "#1e90ff", colorB = "#2ed573" }) {
   const [open,        setOpen]        = useState(false);
@@ -15,29 +44,33 @@ export default function AddButton({ onManual, onPhoto, colorA = "#1e90ff", color
   const fileRef   = useRef();
   const addImgRef = useRef();
 
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
     setOpen(false);
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImages([{ base64: reader.result.split(",")[1], mimeType: file.type || "image/jpeg", dataUrl: reader.result }]);
+    try {
+      const compressed = await compressImage(file);
+      setImages([compressed]);
       setDescription("");
       setShowPreview(true);
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      setMsg("❌ שגיאה בקריאת התמונה");
+      setTimeout(() => setMsg(""), 4000);
+    }
   };
 
-  const handleAddImage = (e) => {
+  const handleAddImage = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImages((prev) => [...prev.slice(0, 1), { base64: reader.result.split(",")[1], mimeType: file.type || "image/jpeg", dataUrl: reader.result }]);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file);
+      setImages((prev) => [...prev.slice(0, 1), compressed]);
+    } catch {
+      setMsg("❌ שגיאה בקריאת התמונה");
+      setTimeout(() => setMsg(""), 4000);
+    }
   };
 
   const handleRemoveImage = (idx) => setImages((prev) => prev.filter((_, i) => i !== idx));
