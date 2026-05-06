@@ -36,16 +36,17 @@ export default function App() {
   const [settings,       setSettings]       = useState({ theme: "default", name: "" });
 
   useEffect(() => {
-    const saved = loadData();
-    if (saved) {
-      setTargetCalories(saved.target || 2000);
-      setHistory(saved.history || {});
-      setCurrentCalories(saved.history?.[todayKey()] || 0);
-      if (saved.settings) {
-        const { geminiKey: _drop, ...cleanSettings } = saved.settings;
-        setSettings({ theme: "default", name: "", ...cleanSettings });
+    loadData().then((saved) => {
+      if (saved) {
+        setTargetCalories(saved.target || 2000);
+        setHistory(saved.history || {});
+        setCurrentCalories(saved.history?.[todayKey()] || 0);
+        if (saved.settings) {
+          const { geminiKey: _drop, ...cleanSettings } = saved.settings;
+          setSettings({ theme: "default", name: "", ...cleanSettings });
+        }
       }
-    }
+    });
   }, []);
 
   useEffect(() => {
